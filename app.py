@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, jsonify
 from models import db, Chambre, Releve, ConfigPrix
 import secrets
 
@@ -173,6 +173,195 @@ def get_dashboard():
         'prix_eau_unitaire': config.prix_eau,
         'prix_elec_unitaire': config.prix_elec
     })
+
+
+@app.route('/locataire/<int:id>/<string:token>', methods=['GET'])
+def espace_locataire(id, token):
+
+    chambre = Chambre.query.get_or_404(id)
+    
+    if chambre.token != token:
+        return " Lien invalide ou expiré", 403
+    
+    releve = Releve.query.filter_by(chambre_id=id).order_by(Releve.annee.desc(), Releve.mois.desc()).first()
+    
+    if not releve:
+        return f"<h3>Aucun relevé trouvé pour {chambre.nom_locataire}</h3>", 404
+    
+   
+    config = ConfigPrix.query.first()
+    if not config:
+        config = ConfigPrix(prix_eau=300, prix_elec=200)
+    
+   
+    conso_eau = releve.eau_nouveau - releve.eau_ancien
+    montant_eau = conso_eau * config.prix_eau
+    
+    conso_elec = releve.elec_nouveau - releve.elec_ancien
+    montant_elec = conso_elec * config.prix_elec
+    
+    total = montant_eau + montant_elec
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Facture GestAppart</title>
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            body {{
+                font-family: Arial, sans-serif;
+                background: #1e1e2f;
+                color: #fff;
+                padding: 20px;
+                line-height: 1.6;
+            }}
+            .container {{
+                max-width: 600px;
+                margin: 0 auto;
+                background: #2a2a3b;
+                border-radius: 15px;
+                padding: 25px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            }}
+            h1 {{
+                color: #4CAF50;
+                text-align: center;
+                margin-bottom: 10px;
+            }}
+            .salutation {{
+                font-size: 1.4em;
+                margin-bottom: 25px;
+                text-align: center;
+                color: #ddd;
+            }}
+            .card {{
+                background: #3a3a4f;
+                border-radius: 12px;
+                padding: 18px;
+                margin-bottom: 20px;
+            }}
+            .card h3 {{
+                color: #FF9800;
+                margin-bottom: 12px;
+                font-size: 1.3em;
+            }}
+            .detail {{
+                display: flex;
+                justify-content: space-between;
+                margin: 8px 0;
+                padding: 5px 0;
+                border-bottom: 1px solid #555;
+            }}
+            .total {{
+                background: #4CAF50;
+                border-radius: 12px;
+                padding: 20px;
+                text-align: center;
+                margin-top: 20px;
+            }}
+            .total h2 {{
+                font-size: 1.8em;
+                margin-bottom: 5px;
+            }}
+            .montant {{
+                font-size: 2em;
+                font-weight: bold;
+                color: #FFD700;
+            }}
+            .footer {{
+                text-align: center;
+                margin-top: 20px;
+                font-size: 0.8em;
+                color: #888;
+            }}
+            .periode {{
+                text-align: center;
+                background: #1e1e2f;
+                padding: 8px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>GestAppart</h1>
+            <div class="salutation">Bonjour {chambre.nom_locataire}</div>
+            <div class="periode"> Facture - {releve.mois}/{releve.annee}</div>
+            
+            <div class="card">
+                <h3> Eau</h3>
+                <div class="detail">
+                    <span>Ancien relevé :</span>
+                    <span>{releve.eau_ancien} m³</span>
+                </div>
+                <div class="detail">
+                    <span>Nouveau relevé :</span>
+                    <span>{releve.eau_nouveau} m³</span>
+                </div>
+                <div class="detail">
+                    <span>Consommation :</span>
+                    <span>{conso_eau} m³</span>
+                </div>
+                <div class="detail">
+                    <span>Prix unitaire :</span>
+                    <span>{config.prix_eau} FCFA/m³</span>
+                </div>
+                <div class="detail" style="border-bottom: none; font-weight: bold;">
+                    <span>Montant :</span>
+                    <span>{montant_eau:,.0f} FCFA</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3> Électricité</h3>
+                <div class="detail">
+                    <span>Ancien relevé :</span>
+                    <span>{releve.elec_ancien} kWh</span>
+                </div>
+                <div class="detail">
+                    <span>Nouveau relevé :</span>
+                    <span>{releve.elec_nouveau} kWh</span>
+                </div>
+                <div class="detail">
+                    <span>Consommation :</span>
+                    <span>{conso_elec} kWh</span>
+                </div>
+                <div class="detail">
+                    <span>Prix unitaire :</span>
+                    <span>{config.prix_elec} FCFA/kWh</span>
+                </div>
+                <div class="detail" style="border-bottom: none; font-weight: bold;">
+                    <span>Montant :</span>
+                    <span>{montant_elec:,.0f} FCFA</span>
+                </div>
+            </div>
+            
+            <div class="total">
+                <h2> TOTAL À PAYER</h2>
+                <div class="montant">{total:,.0f} FCFA</div>
+            </div>
+            
+            <div class="footer">
+                GestAppart - Facture détaillée<br>
+                En cas d'erreur, contactez le 90 02 54 63
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
+
+@app.route('/admin')
+def admin():
+    return render_template('admin.html')
 
 if __name__ == '__main__':
     with app.app_context():
