@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import UniqueConstraint
 from datetime import datetime
 
 db = SQLAlchemy()
@@ -13,7 +14,8 @@ class Chambre(db.Model):
     token = db.Column(db.String(100), unique=True, nullable=False)
 
 class Releve(db.Model):
-    __tablename__ = 'releves'
+    __tablename__ = 'releves' 
+    __table_args__ = (UniqueConstraint('chambre_id', 'mois', 'annee', name='uq_releve'),)
     id = db.Column(db.Integer, primary_key=True)
     chambre_id = db.Column(db.Integer, db.ForeignKey('chambres.id'), nullable=False)
     mois = db.Column(db.Integer, nullable=False)

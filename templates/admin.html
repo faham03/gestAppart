@@ -5,414 +5,606 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>GestAppart - Administration</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f1a; color: #e0e0e0; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0f0f1a;
-            color: #e0e0e0;
-        }
+        .app-container { display: flex; min-height: 100vh; }
 
-        /* Container principal */
-        .app-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Sidebar (desktop) */
         .sidebar {
-            width: 260px;
-            background: #1a1a2e;
-            border-right: 1px solid #2a2a3b;
-            padding: 25px 15px;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
+            width: 260px; background: #1a1a2e; border-right: 1px solid #2a2a3b;
+            padding: 25px 15px; position: fixed; height: 100vh; overflow-y: auto;
+            display: flex; flex-direction: column;
         }
-
-        .sidebar h2 {
-            color: #4CAF50;
-            margin-bottom: 30px;
-            font-size: 1.5em;
-            text-align: center;
+        .sidebar h2 { color: #4CAF50; margin-bottom: 30px; font-size: 1.5em; text-align: center; }
+        .sidebar-nav { flex: 1; }
+        .nav-item { padding: 12px 18px; margin: 8px 0; cursor: pointer; border-radius: 10px; transition: all 0.3s; color: #ccc; }
+        .nav-item:hover { background: #2a2a3b; color: white; }
+        .nav-item.active { background: #4CAF50; color: white; }
+        .sidebar-footer { padding-top: 12px; border-top: 1px solid #2a2a3b; }
+        .logout-link {
+            display: block; padding: 12px 18px; border-radius: 10px; text-decoration: none;
+            color: #e74c3c; transition: background .3s; font-size: 0.95em;
         }
+        .logout-link:hover { background: #2a2a3b; }
 
-        .nav-item {
-            padding: 12px 18px;
-            margin: 8px 0;
-            cursor: pointer;
-            border-radius: 10px;
-            transition: all 0.3s;
-            color: #ccc;
-        }
+        .main-content { flex: 1; margin-left: 260px; padding: 25px; }
+        .main-content h1 { margin-bottom: 6px; }
 
-        .nav-item:hover {
-            background: #2a2a3b;
-            color: white;
-        }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .kpi-card { background: #1a1a2e; padding: 18px 20px; border-radius: 15px; text-align: center; border: 1px solid #2a2a3b; }
+        .kpi-card h3 { font-size: 0.8em; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
+        .kpi-card .value { font-size: 1.9em; font-weight: 700; color: #4CAF50; }
+        .kpi-card.highlight { border-color: #4CAF50; }
+        .kpi-card.highlight .value { font-size: 2.2em; }
 
-        .nav-item.active {
-            background: #4CAF50;
-            color: white;
-        }
+        .table-container { background: #1a1a2e; border-radius: 15px; padding: 20px; overflow-x: auto; margin-bottom: 25px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid #2a2a3b; }
+        th { color: #4CAF50; font-weight: 600; font-size: 0.85em; text-transform: uppercase; letter-spacing: .04em; }
+        td { font-size: 0.9em; vertical-align: middle; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
 
-        /* Contenu principal */
-        .main-content {
-            flex: 1;
-            margin-left: 260px;
-            padding: 25px;
-        }
+        button { background: #4CAF50; color: white; border: none; padding: 7px 14px; border-radius: 8px; cursor: pointer; margin: 2px; transition: all 0.25s; font-size: 0.85em; font-family: inherit; }
+        button:hover { opacity: 0.88; transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
+        button.danger    { background: #e74c3c; }
+        button.secondary { background: #2a2a3b; color: #ccc; border: 1px solid #3a3a4b; }
+        button.secondary:hover { background: #3a3a4b; color: white; }
+        button.info      { background: #2980b9; }
+        button.whatsapp  { background: #25D366; }
+        button.btn-lg    { padding: 10px 22px; font-size: 0.95em; }
 
-        /* Cartes KPI */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
+        input, select { padding: 9px 12px; margin: 4px 0; border: 1px solid #2a2a3b; background: #2a2a3b; color: white; border-radius: 8px; font-size: 0.9em; font-family: inherit; }
+        input:focus, select:focus { outline: none; border-color: #4CAF50; }
+        label { display: block; margin-bottom: 4px; color: #aaa; font-size: 0.83em; }
+        .form-group { margin-bottom: 14px; }
+        .form-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+        hr.sep { border: none; border-top: 1px solid #2a2a3b; margin: 18px 0; }
 
-        .kpi-card {
-            background: #1a1a2e;
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-            border: 1px solid #2a2a3b;
-        }
+        .page { display: none; }
+        .page.active-page { display: block; }
 
-        .kpi-card h3 {
-            font-size: 0.9em;
-            color: #aaa;
-            margin-bottom: 10px;
-        }
+        .mobile-tabs { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a2e; border-top: 1px solid #2a2a3b; z-index: 100; }
+        .mobile-tab { flex: 1; text-align: center; padding: 7px 2px; cursor: pointer; transition: color 0.2s; color: #666; }
+        .mobile-tab .t-icon  { font-size: 1.3em; display: block; }
+        .mobile-tab .t-label { display: block; font-size: 0.6em; margin-top: 1px; }
+        .mobile-tab.active { color: #4CAF50; }
 
-        .kpi-card .value {
-            font-size: 2em;
-            font-weight: bold;
-            color: #4CAF50;
-        }
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .toast { padding: 11px 18px; border-radius: 10px; color: white; font-size: 0.88em; opacity: 0; transform: translateX(60px); transition: all 0.3s cubic-bezier(.21,1.02,.73,1); max-width: 310px; pointer-events: none; }
+        .toast.show    { opacity: 1; transform: translateX(0); }
+        .toast.success { background: #27ae60; }
+        .toast.error   { background: #c0392b; }
+        .toast.info    { background: #2980b9; }
+        .toast.warning { background: #d68910; }
 
-        /* Tableaux */
-        .table-container {
-            background: #1a1a2e;
-            border-radius: 15px;
-            padding: 20px;
-            overflow-x: auto;
-            margin-bottom: 30px;
-        }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; }
+        .modal { background: #1a1a2e; border-radius: 16px; padding: 28px; width: 92%; max-width: 430px; border: 1px solid #2a2a3b; }
+        .modal h3 { color: #4CAF50; margin-bottom: 22px; }
+        .modal input { width: 100%; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 22px; justify-content: flex-end; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        .facture-box { background: #1a1a2e; border-radius: 14px; padding: 20px; margin-top: 14px; border: 1px solid #2a2a3b; }
+        .facture-box h3 { color: #4CAF50; margin-bottom: 4px; }
+        .facture-periode { font-size: 0.82em; color: #666; margin-bottom: 16px; }
+        .f-section-title { font-size: 0.82em; color: #aaa; margin: 14px 0 6px; }
+        .f-row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #1f1f30; font-size: 0.9em; }
+        .f-row.total { font-size: 1.15em; font-weight: 700; color: #4CAF50; border: none; padding-top: 14px; }
 
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #2a2a3b;
-        }
+        .historique-box { background: #1a1a2e; border-radius: 14px; padding: 20px; margin-top: 14px; border: 1px solid #2a2a3b; }
+        .historique-box h4 { color: #888; font-size: 0.82em; font-weight: 400; margin-bottom: 12px; text-transform: uppercase; letter-spacing: .04em; }
 
-        th {
-            color: #4CAF50;
-            font-weight: 600;
-        }
+        .config-card { background: #1a1a2e; border-radius: 14px; padding: 24px; margin-bottom: 20px; border: 1px solid #2a2a3b; max-width: 480px; }
+        .config-card h3 { color: #4CAF50; margin-bottom: 22px; }
+        .config-row { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+        .config-row label { min-width: 210px; color: #ccc; font-size: 0.9em; margin: 0; }
+        .config-row input { width: 110px; }
+        .config-row .unit { color: #555; font-size: 0.82em; }
 
-        button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin: 5px;
-            transition: all 0.3s;
-        }
+        .dash-periode { font-size: 0.82em; color: #555; margin-bottom: 18px; }
 
-        button:hover {
-            background: #45a049;
-            transform: translateY(-2px);
-        }
-
-        button.danger {
-            background: #e74c3c;
-        }
-
-        button.danger:hover {
-            background: #c0392b;
-        }
-
-        input, select {
-            padding: 8px 12px;
-            margin: 5px;
-            border: 1px solid #2a2a3b;
-            background: #2a2a3b;
-            color: white;
-            border-radius: 8px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #aaa;
-        }
-
-        /* Onglets mobiles (cachés sur desktop) */
-        .mobile-tabs {
-            display: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #1a1a2e;
-            border-top: 1px solid #2a2a3b;
-            z-index: 100;
-        }
-
-        .mobile-tab {
-            flex: 1;
-            text-align: center;
-            padding: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .mobile-tab.active {
-            background: #4CAF50;
-            color: white;
-        }
-
-        /* Responsive */
         @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-            }
-            .main-content {
-                margin-left: 0;
-                padding-bottom: 70px;
-            }
-            .mobile-tabs {
-                display: flex;
-            }
-        }
-
-        .page {
-            display: none;
-        }
-
-        .page.active-page {
-            display: block;
-        }
-
-        .facture-detail {
-            background: #1a1a2e;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .token {
-            font-family: monospace;
-            background: #0f0f1a;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.8em;
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; padding: 14px; padding-bottom: 72px; }
+            .mobile-tabs { display: flex; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .config-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+            .config-row input { width: 100%; }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Sidebar Desktop -->
-        <div class="sidebar">
-            <h2>🏠 GestAppart</h2>
+
+<div id="toast-container"></div>
+
+<!-- Modal modifier chambre -->
+<div class="modal-overlay" id="modal-chambre">
+    <div class="modal">
+        <h3>✏️ Modifier la chambre</h3>
+        <input type="hidden" id="edit-id">
+        <div class="form-group">
+            <label>Numéro de chambre</label>
+            <input type="text" id="edit-numero" placeholder="Ex: A1">
+        </div>
+        <div class="form-group">
+            <label>Nom du locataire</label>
+            <input type="text" id="edit-locataire">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Caution (FCFA)</label>
+                <input type="number" id="edit-caution" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>Avance (FCFA)</label>
+                <input type="number" id="edit-avance" placeholder="0">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="secondary" onclick="fermerModal()">Annuler</button>
+            <button onclick="sauvegarderChambre()">💾 Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<div class="app-container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>🏠 GestAppart</h2>
+        <div class="sidebar-nav">
             <div class="nav-item active" data-page="dashboard">📊 Dashboard</div>
             <div class="nav-item" data-page="chambres">🏘️ Chambres</div>
             <div class="nav-item" data-page="releves">📝 Saisir relevés</div>
             <div class="nav-item" data-page="factures">🧾 Factures</div>
+            <div class="nav-item" data-page="parametres">⚙️ Paramètres</div>
         </div>
-
-        <!-- Contenu principal -->
-        <div class="main-content">
-            <!-- Page Dashboard -->
-            <div id="dashboard" class="page active-page">
-                <h1>📊 Dashboard</h1>
-                <div class="kpi-grid" id="kpi-container">
-                    <div class="kpi-card"><h3>Chambres</h3><div class="value" id="nb-chambres">-</div></div>
-                    <div class="kpi-card"><h3>Total Eau (FCFA)</h3><div class="value" id="total-eau">-</div></div>
-                    <div class="kpi-card"><h3>Total Électricité (FCFA)</h3><div class="value" id="total-elec">-</div></div>
-                    <div class="kpi-card"><h3>Total Général (FCFA)</h3><div class="value" id="total-general">-</div></div>
-                </div>
-            </div>
-
-            <!-- Page Chambres -->
-            <div id="chambres" class="page">
-                <h1>🏘️ Gestion des chambres</h1>
-                <button onclick="showAjouterChambre()">+ Ajouter une chambre</button>
-                <div class="table-container">
-                    <table id="chambres-table">
-                        <thead>
-                            <tr><th>ID</th><th>Numéro</th><th>Locataire</th><th>Caution</th><th>Avance</th><th>Actions</th></tr>
-                        </thead>
-                        <tbody id="chambres-list"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Page Relevés -->
-            <div id="releves" class="page">
-                <h1>📝 Saisir relevés du mois</h1>
-                <div class="table-container">
-                    <label>Chambre :</label>
-                    <select id="releve-chambre-id"></select>
-                    <label>Mois :</label>
-                    <input type="number" id="releve-mois" placeholder="4" value="5">
-                    <label>Année :</label>
-                    <input type="number" id="releve-annee" placeholder="2026" value="2026">
-                    <hr>
-                    <h3>💧 Eau</h3>
-                    <input type="number" id="eau-ancien" placeholder="Ancien relevé (m³)">
-                    <input type="number" id="eau-nouveau" placeholder="Nouveau relevé (m³)">
-                    <h3>⚡ Électricité</h3>
-                    <input type="number" id="elec-ancien" placeholder="Ancien relevé (kWh)">
-                    <input type="number" id="elec-nouveau" placeholder="Nouveau relevé (kWh)">
-                    <br>
-                    <button onclick="ajouterReleve()">Enregistrer relevé</button>
-                </div>
-            </div>
-
-            <!-- Page Factures -->
-            <div id="factures" class="page">
-                <h1>🧾 Factures détaillées</h1>
-                <select id="facture-chambre-id" onchange="afficherFacture()"></select>
-                <div id="facture-detail"></div>
-            </div>
-        </div>
-
-        <!-- Onglets mobiles -->
-        <div class="mobile-tabs">
-            <div class="mobile-tab active" data-page="dashboard">📊</div>
-            <div class="mobile-tab" data-page="chambres">🏘️</div>
-            <div class="mobile-tab" data-page="releves">📝</div>
-            <div class="mobile-tab" data-page="factures">🧾</div>
+        <div class="sidebar-footer">
+            <a href="/logout" class="logout-link">🚪 Déconnexion</a>
         </div>
     </div>
 
-    <script>
-        // Navigation
-        function navigateTo(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-            document.getElementById(page).classList.add('active-page');
-            document.querySelectorAll('.nav-item, .mobile-tab').forEach(nav => nav.classList.remove('active'));
-            document.querySelectorAll(`[data-page="${page}"]`).forEach(nav => nav.classList.add('active'));
-        }
+    <div class="main-content">
 
-        document.querySelectorAll('.nav-item, .mobile-tab').forEach(nav => {
-            nav.addEventListener('click', () => navigateTo(nav.dataset.page));
-        });
-
-        // Charger les chambres
-        async function loadChambres() {
-            const res = await fetch('/api/chambres');
-            const chambres = await res.json();
-            const list = document.getElementById('chambres-list');
-            list.innerHTML = '';
-            chambres.forEach(c => {
-                list.innerHTML += `<tr>
-                    <td>${c.id}</td><td>${c.numero}</td><td>${c.nom_locataire}</td>
-                    <td>${c.caution}</td><td>${c.avance}</td>
-                    <td><button onclick="supprimerChambre(${c.id})">🗑️</button></td>
-                </tr>`;
-            });
-            const selects = ['releve-chambre-id', 'facture-chambre-id'];
-            selects.forEach(id => {
-                const select = document.getElementById(id);
-                if(select) {
-                    select.innerHTML = `<option value="">Choisir</option>` + chambres.map(c => `<option value="${c.id}">${c.numero} - ${c.nom_locataire}</option>`).join('');
-                }
-            });
-            document.getElementById('nb-chambres').innerText = chambres.length;
-        }
-
-        async function supprimerChambre(id) {
-            if(confirm('Supprimer cette chambre ?')) {
-                await fetch(`/api/chambres/${id}`, {method: 'DELETE'});
-                loadChambres();
-                loadDashboard();
-            }
-        }
-
-        function showAjouterChambre() {
-            const numero = prompt('Numéro de chambre :');
-            const nom = prompt('Nom locataire :');
-            if(numero && nom) {
-                fetch('/api/chambres', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({numero, nom_locataire: nom, caution: 0, avance: 0})
-                }).then(() => loadChambres());
-            }
-        }
-
-        async function ajouterReleve() {
-            const data = {
-                chambre_id: parseInt(document.getElementById('releve-chambre-id').value),
-                mois: parseInt(document.getElementById('releve-mois').value),
-                annee: parseInt(document.getElementById('releve-annee').value),
-                eau_ancien: parseFloat(document.getElementById('eau-ancien').value),
-                eau_nouveau: parseFloat(document.getElementById('eau-nouveau').value),
-                elec_ancien: parseFloat(document.getElementById('elec-ancien').value),
-                elec_nouveau: parseFloat(document.getElementById('elec-nouveau').value)
-            };
-            if(!data.chambre_id) { alert('Choisissez une chambre'); return; }
-            const res = await fetch('/api/releves', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-            if(res.ok) alert('Relevé ajouté');
-            else alert('Erreur');
-        }
-
-        async function afficherFacture() {
-            const id = document.getElementById('facture-chambre-id').value;
-            if(!id) return;
-            const res = await fetch(`/api/facture/${id}`);
-            const facture = await res.json();
-            if(facture.error) {
-                document.getElementById('facture-detail').innerHTML = '<p>Aucune facture</p>';
-                return;
-            }
-            document.getElementById('facture-detail').innerHTML = `
-                <div class="facture-detail">
-                    <h3>Chambre ${facture.numero} - ${facture.locataire}</h3>
-                    <p>📍 Mois : ${facture.mois}/${facture.annee}</p>
-                    <hr>
-                    <h4>💧 Eau</h4>
-                    <p>${facture.eau.ancien} → ${facture.eau.nouveau} m³ : ${facture.eau.consommation} m³ × ${facture.eau.prix_unitaire} = ${facture.eau.montant} FCFA</p>
-                    <h4>⚡ Électricité</h4>
-                    <p>${facture.electricite.ancien} → ${facture.electricite.nouveau} kWh : ${facture.electricite.consommation} kWh × ${facture.electricite.prix_unitaire} = ${facture.electricite.montant} FCFA</p>
-                    <h2>💰 TOTAL : ${facture.total} FCFA</h2>
+        <!-- Dashboard -->
+        <div id="dashboard" class="page active-page">
+            <h1>📊 Dashboard</h1>
+            <div class="dash-periode" id="dash-periode"></div>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <h3>Chambres</h3>
+                    <div class="value" id="nb-chambres">—</div>
                 </div>
-            `;
-        }
+                <div class="kpi-card">
+                    <h3>Facturées ce mois</h3>
+                    <div class="value" id="nb-facturees">—</div>
+                </div>
+                <div class="kpi-card">
+                    <h3>Total Eau</h3>
+                    <div class="value" id="total-eau">—</div>
+                </div>
+                <div class="kpi-card">
+                    <h3>Total Électricité</h3>
+                    <div class="value" id="total-elec">—</div>
+                </div>
+                <div class="kpi-card highlight" style="grid-column: 1 / -1;">
+                    <h3>Total Général (FCFA)</h3>
+                    <div class="value" id="total-general">—</div>
+                </div>
+            </div>
+        </div>
 
-        async function loadDashboard() {
-            const res = await fetch('/api/dashboard');
-            const data = await res.json();
-            document.getElementById('total-eau').innerText = data.total_eau?.toLocaleString() || '0';
-            document.getElementById('total-elec').innerText = data.total_electricite?.toLocaleString() || '0';
-            document.getElementById('total-general').innerText = data.total_general?.toLocaleString() || '0';
-        }
+        <!-- Chambres -->
+        <div id="chambres" class="page">
+            <h1>🏘️ Gestion des chambres</h1>
+            <button onclick="showAjouterChambre()" style="margin:14px 0;">+ Ajouter une chambre</button>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Locataire</th>
+                            <th>Caution</th>
+                            <th>Avance</th>
+                            <th>Partage</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chambres-list"></tbody>
+                </table>
+            </div>
+        </div>
 
-        loadChambres();
+        <!-- Relevés -->
+        <div id="releves" class="page">
+            <h1>📝 Saisir relevés du mois</h1>
+            <div class="table-container" style="margin-top:16px;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Chambre</label>
+                        <select id="releve-chambre-id"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mois</label>
+                        <input type="number" id="releve-mois" min="1" max="12" value="5" style="width:75px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Année</label>
+                        <input type="number" id="releve-annee" value="2026" style="width:95px;">
+                    </div>
+                </div>
+                <hr class="sep">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>💧 Eau — Ancien (m³)</label>
+                        <input type="number" id="eau-ancien" placeholder="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>💧 Eau — Nouveau (m³)</label>
+                        <input type="number" id="eau-nouveau" placeholder="0" step="0.01">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>⚡ Élec — Ancien (kWh)</label>
+                        <input type="number" id="elec-ancien" placeholder="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>⚡ Élec — Nouveau (kWh)</label>
+                        <input type="number" id="elec-nouveau" placeholder="0" step="0.01">
+                    </div>
+                </div>
+                <button class="btn-lg" onclick="ajouterReleve()" style="margin-top:8px;">✅ Enregistrer le relevé</button>
+            </div>
+        </div>
+
+        <!-- Factures -->
+        <div id="factures" class="page">
+            <h1>🧾 Factures</h1>
+            <div style="margin:16px 0;">
+                <label style="display:inline;margin-right:8px;font-size:0.9em;">Chambre :</label>
+                <select id="facture-chambre-id" onchange="afficherFacture()"></select>
+            </div>
+            <div id="facture-detail"></div>
+        </div>
+
+        <!-- Paramètres -->
+        <div id="parametres" class="page">
+            <h1>⚙️ Paramètres</h1>
+            <div class="config-card" style="margin-top:16px;">
+                <h3>💰 Prix unitaires</h3>
+                <div class="config-row">
+                    <label>Prix de l'eau</label>
+                    <input type="number" id="param-prix-eau" min="1">
+                    <span class="unit">FCFA / m³</span>
+                </div>
+                <div class="config-row">
+                    <label>Prix de l'électricité</label>
+                    <input type="number" id="param-prix-elec" min="1">
+                    <span class="unit">FCFA / kWh</span>
+                </div>
+                <button class="btn-lg" onclick="sauvegarderConfig()" style="margin-top:8px;">💾 Enregistrer</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Mobile tabs -->
+    <div class="mobile-tabs">
+        <div class="mobile-tab active" data-page="dashboard">
+            <span class="t-icon">📊</span><span class="t-label">Dashboard</span>
+        </div>
+        <div class="mobile-tab" data-page="chambres">
+            <span class="t-icon">🏘️</span><span class="t-label">Chambres</span>
+        </div>
+        <div class="mobile-tab" data-page="releves">
+            <span class="t-icon">📝</span><span class="t-label">Relevés</span>
+        </div>
+        <div class="mobile-tab" data-page="factures">
+            <span class="t-icon">🧾</span><span class="t-label">Factures</span>
+        </div>
+        <div class="mobile-tab" data-page="parametres">
+            <span class="t-icon">⚙️</span><span class="t-label">Config</span>
+        </div>
+    </div>
+</div>
+
+<script>
+let chambresCache = {};
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function navigateTo(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+    document.getElementById(page).classList.add('active-page');
+    document.querySelectorAll('.nav-item, .mobile-tab').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll(`[data-page="${page}"]`).forEach(n => n.classList.add('active'));
+    if (page === 'parametres') loadConfig();
+}
+document.querySelectorAll('.nav-item, .mobile-tab').forEach(nav => {
+    nav.addEventListener('click', () => navigateTo(nav.dataset.page));
+});
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 350);
+    }, 3200);
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function ouvrirModal(id) {
+    const c = chambresCache[id];
+    document.getElementById('edit-id').value       = c.id;
+    document.getElementById('edit-numero').value   = c.numero;
+    document.getElementById('edit-locataire').value = c.nom_locataire;
+    document.getElementById('edit-caution').value  = c.caution;
+    document.getElementById('edit-avance').value   = c.avance;
+    document.getElementById('modal-chambre').classList.add('open');
+}
+function fermerModal() {
+    document.getElementById('modal-chambre').classList.remove('open');
+}
+document.getElementById('modal-chambre').addEventListener('click', e => {
+    if (e.target === e.currentTarget) fermerModal();
+});
+async function sauvegarderChambre() {
+    const id   = document.getElementById('edit-id').value;
+    const data = {
+        numero:        document.getElementById('edit-numero').value.trim(),
+        nom_locataire: document.getElementById('edit-locataire').value.trim(),
+        caution:       parseFloat(document.getElementById('edit-caution').value) || 0,
+        avance:        parseFloat(document.getElementById('edit-avance').value)  || 0
+    };
+    if (!data.numero || !data.nom_locataire) {
+        showToast('Le numéro et le nom sont requis', 'warning'); return;
+    }
+    const res = await fetch(`/api/chambres/${id}`, {
+        method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+    });
+    if (res.ok) { showToast('Chambre modifiée'); fermerModal(); loadChambres(); }
+    else showToast('Erreur lors de la modification', 'error');
+}
+
+// ── Chambres ──────────────────────────────────────────────────────────────────
+async function loadChambres() {
+    const res     = await fetch('/api/chambres');
+    const chambres = await res.json();
+    chambresCache = {};
+    chambres.forEach(c => { chambresCache[c.id] = c; });
+
+    const list = document.getElementById('chambres-list');
+    list.innerHTML = '';
+    chambres.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${c.numero}</strong></td>
+            <td>${c.nom_locataire}</td>
+            <td>${(c.caution || 0).toLocaleString()} FCFA</td>
+            <td>${(c.avance  || 0).toLocaleString()} FCFA</td>
+            <td></td><td></td>`;
+
+        // Bouton copier lien
+        const btnLien = document.createElement('button');
+        btnLien.className = 'info';
+        btnLien.textContent = '🔗 Copier lien';
+        btnLien.onclick = () => copierLien(c.id);
+
+        // Bouton WhatsApp
+        const btnWA = document.createElement('button');
+        btnWA.className = 'whatsapp';
+        btnWA.textContent = '💬 WhatsApp';
+        btnWA.onclick = () => partagerWhatsApp(c.id);
+
+        tr.cells[4].appendChild(btnLien);
+        tr.cells[4].appendChild(btnWA);
+
+        // Bouton modifier
+        const btnEdit = document.createElement('button');
+        btnEdit.className = 'secondary';
+        btnEdit.textContent = '✏️';
+        btnEdit.onclick = () => ouvrirModal(c.id);
+
+        // Bouton supprimer
+        const btnDel = document.createElement('button');
+        btnDel.className = 'danger';
+        btnDel.textContent = '🗑️';
+        btnDel.onclick = () => supprimerChambre(c.id);
+
+        tr.cells[5].appendChild(btnEdit);
+        tr.cells[5].appendChild(btnDel);
+        list.appendChild(tr);
+    });
+
+    ['releve-chambre-id', 'facture-chambre-id'].forEach(selectId => {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        const prev = select.value;
+        select.innerHTML = '<option value="">— Choisir une chambre —</option>' +
+            chambres.map(c => `<option value="${c.id}">${c.numero} — ${c.nom_locataire}</option>`).join('');
+        if (prev) select.value = prev;
+    });
+
+    document.getElementById('nb-chambres').textContent = chambres.length;
+}
+
+function copierLien(id) {
+    const c   = chambresCache[id];
+    const url = `${window.location.origin}/locataire/${c.id}/${c.token}`;
+    navigator.clipboard.writeText(url)
+        .then(() => showToast('Lien locataire copié !', 'info'))
+        .catch(() => prompt('Copie ce lien :', url));
+}
+
+function partagerWhatsApp(id) {
+    const c   = chambresCache[id];
+    const url = `${window.location.origin}/locataire/${c.id}/${c.token}`;
+    const msg = encodeURIComponent(
+        `Bonjour ${c.nom_locataire},\n\nVotre facture GestAppart du mois est disponible ici :\n${url}\n\nMerci.`
+    );
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
+async function supprimerChambre(id) {
+    if (!confirm('Supprimer cette chambre ? Action irréversible.')) return;
+    const res = await fetch(`/api/chambres/${id}`, {method: 'DELETE'});
+    if (res.ok) { showToast('Chambre supprimée'); loadChambres(); loadDashboard(); }
+    else showToast('Erreur lors de la suppression', 'error');
+}
+
+function showAjouterChambre() {
+    const numero = prompt('Numéro de chambre (ex : A1) :');
+    if (!numero?.trim()) return;
+    const nom = prompt('Nom du locataire :');
+    if (!nom?.trim()) return;
+    const caution = parseFloat(prompt('Caution (FCFA) :', '0') || '0');
+    const avance  = parseFloat(prompt('Avance (FCFA) :',  '0') || '0');
+    fetch('/api/chambres', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({numero: numero.trim(), nom_locataire: nom.trim(), caution, avance})
+    }).then(async res => {
+        if (res.ok) { showToast('Chambre ajoutée'); loadChambres(); }
+        else { const e = await res.json(); showToast(e.error || "Erreur d'ajout", 'error'); }
+    });
+}
+
+// ── Relevés ───────────────────────────────────────────────────────────────────
+async function ajouterReleve() {
+    const chambre_id = parseInt(document.getElementById('releve-chambre-id').value);
+    if (!chambre_id) { showToast('Veuillez choisir une chambre', 'warning'); return; }
+    const data = {
+        chambre_id,
+        mois:        parseInt(document.getElementById('releve-mois').value),
+        annee:       parseInt(document.getElementById('releve-annee').value),
+        eau_ancien:  parseFloat(document.getElementById('eau-ancien').value)  || 0,
+        eau_nouveau: parseFloat(document.getElementById('eau-nouveau').value) || 0,
+        elec_ancien:  parseFloat(document.getElementById('elec-ancien').value)  || 0,
+        elec_nouveau: parseFloat(document.getElementById('elec-nouveau').value) || 0
+    };
+    const res = await fetch('/api/releves', {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+    });
+    if (res.ok) {
+        showToast('Relevé enregistré');
+        ['eau-ancien','eau-nouveau','elec-ancien','elec-nouveau'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('releve-chambre-id').value = '';
         loadDashboard();
-        setInterval(loadDashboard, 5000);
-    </script>
+    } else {
+        const e = await res.json();
+        showToast(e.error || 'Erreur lors de l\'enregistrement', 'error');
+    }
+}
+
+// ── Factures ──────────────────────────────────────────────────────────────────
+async function afficherFacture() {
+    const id        = document.getElementById('facture-chambre-id').value;
+    const container = document.getElementById('facture-detail');
+    if (!id) { container.innerHTML = ''; return; }
+
+    const [resF, resH, resC] = await Promise.all([
+        fetch(`/api/facture/${id}`),
+        fetch(`/api/releves/${id}`),
+        fetch('/api/config')
+    ]);
+    const facture = await resF.json();
+    const releves = await resH.json();
+    const config  = await resC.json();
+
+    if (facture.error) {
+        container.innerHTML = '<p style="color:#555;margin-top:16px;font-size:.9em;">Aucune facture disponible.</p>';
+        return;
+    }
+
+    let html = `
+        <div class="facture-box">
+            <h3>Chambre ${facture.numero} — ${facture.locataire}</h3>
+            <p class="facture-periode">Période : ${facture.mois}/${facture.annee}</p>
+            <p class="f-section-title">💧 Eau</p>
+            <div class="f-row"><span>Relevé ${facture.eau.ancien} → ${facture.eau.nouveau} m³</span><span>${facture.eau.consommation} m³</span></div>
+            <div class="f-row"><span>× ${facture.eau.prix_unitaire} FCFA/m³</span><span>${facture.eau.montant.toLocaleString()} FCFA</span></div>
+            <p class="f-section-title">⚡ Électricité</p>
+            <div class="f-row"><span>Relevé ${facture.electricite.ancien} → ${facture.electricite.nouveau} kWh</span><span>${facture.electricite.consommation} kWh</span></div>
+            <div class="f-row"><span>× ${facture.electricite.prix_unitaire} FCFA/kWh</span><span>${facture.electricite.montant.toLocaleString()} FCFA</span></div>
+            <div class="f-row total"><span>💰 TOTAL À PAYER</span><span>${facture.total.toLocaleString()} FCFA</span></div>
+        </div>`;
+
+    if (releves.length > 1) {
+        const rows = releves.map(r => {
+            const cEau  = r.eau_nouveau  - r.eau_ancien;
+            const cElec = r.elec_nouveau - r.elec_ancien;
+            const total = cEau * config.prix_eau + cElec * config.prix_elec;
+            return `<tr>
+                <td>${r.mois}/${r.annee}</td>
+                <td>${r.eau_ancien} → ${r.eau_nouveau}</td>
+                <td>${cEau.toFixed(2)} m³</td>
+                <td>${r.elec_ancien} → ${r.elec_nouveau}</td>
+                <td>${cElec.toFixed(2)} kWh</td>
+                <td><strong>${total.toLocaleString()} FCFA</strong></td>
+            </tr>`;
+        }).join('');
+        html += `
+            <div class="historique-box">
+                <h4>Historique des relevés</h4>
+                <table>
+                    <thead><tr><th>Mois</th><th>Eau (m³)</th><th>Conso eau</th><th>Élec (kWh)</th><th>Conso élec</th><th>Total</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>`;
+    }
+    container.innerHTML = html;
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+const MOIS = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+async function loadDashboard() {
+    const res  = await fetch('/api/dashboard');
+    const data = await res.json();
+    document.getElementById('total-eau').textContent     = (data.total_eau         ?? 0).toLocaleString();
+    document.getElementById('total-elec').textContent    = (data.total_electricite  ?? 0).toLocaleString();
+    document.getElementById('total-general').textContent = (data.total_general      ?? 0).toLocaleString();
+    document.getElementById('nb-facturees').textContent  =  data.nb_chambres_facturees ?? 0;
+    const p = document.getElementById('dash-periode');
+    p.textContent = data.mois && data.annee
+        ? `Données de ${MOIS[data.mois]} ${data.annee}`
+        : (data.message || '');
+}
+
+// ── Config ────────────────────────────────────────────────────────────────────
+async function loadConfig() {
+    const res    = await fetch('/api/config');
+    const config = await res.json();
+    document.getElementById('param-prix-eau').value  = config.prix_eau;
+    document.getElementById('param-prix-elec').value = config.prix_elec;
+}
+async function sauvegarderConfig() {
+    const prix_eau  = parseFloat(document.getElementById('param-prix-eau').value);
+    const prix_elec = parseFloat(document.getElementById('param-prix-elec').value);
+    if (!prix_eau || prix_eau <= 0 || !prix_elec || prix_elec <= 0) {
+        showToast('Les prix doivent être supérieurs à 0', 'warning'); return;
+    }
+    const res = await fetch('/api/config', {
+        method: 'PUT', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({prix_eau, prix_elec})
+    });
+    if (res.ok) showToast('Paramètres enregistrés');
+    else showToast('Erreur lors de la sauvegarde', 'error');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadChambres();
+loadDashboard();
+setInterval(() => { if (!document.hidden) loadDashboard(); }, 10000);
+</script>
 </body>
 </html>
