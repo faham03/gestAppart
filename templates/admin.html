@@ -113,6 +113,33 @@
             .config-row { flex-direction: column; align-items: flex-start; gap: 4px; }
             .config-row input { width: 100%; }
         }
+
+        @media print {
+            .sidebar,
+            .mobile-tabs,
+            #toast-container,
+            select,
+            button,
+            .historique-box,
+            h1,
+            .dash-periode { display: none !important; }
+
+            /* Remettre le contenu en pleine page */
+            .main-content { margin-left: 0 !important; padding: 10px !important; }
+
+            /* Rendre les autres pages invisibles */
+            .page { display: none !important; }
+            #factures { display: block !important; }
+
+            /* Couleurs claires pour l'impression */
+            body { background: white !important; color: black !important; }
+            .facture-box { background: white !important; border: 1px solid #ccc !important; color: black !important; }
+            .f-row { border-bottom: 1px solid #ddd !important; color: black !important; }
+            .f-section-title { color: #555 !important; }
+            .f-row.total { color: #27ae60 !important; font-size: 1.2em; }
+            .facture-box h3 { color: #27ae60 !important; }
+            .facture-periode { color: #555 !important; }
+             }
     </style>
 </head>
 <body>
@@ -172,6 +199,7 @@
         <div id="dashboard" class="page active-page">
             <h1>📊 Dashboard</h1>
             <div class="dash-periode" id="dash-periode"></div>
+            <button onclick="exporterCSV()">📥 Exporter CSV</button>
             <div class="kpi-grid">
                 <div class="kpi-card">
                     <h3>Chambres</h3>
@@ -505,6 +533,19 @@ async function ajouterReleve() {
     }
 }
 
+async function supprimerReleve(id) {
+    if (!confirm('Supprimer ce relevé ?')) return;
+
+    const res = await fetch(`/api/releves/${id}`, { method: 'DELETE'});
+
+    if (res.ok) {
+        showToast('Relevé supprimé');
+        afficherFacture();
+    } else {
+        showToast('Erreur lors de la suppression', 'error')
+    }
+    
+}
 // ── Factures ──────────────────────────────────────────────────────────────────
 async function afficherFacture() {
     const id        = document.getElementById('facture-chambre-id').value;
@@ -536,6 +577,9 @@ async function afficherFacture() {
             <div class="f-row"><span>Relevé ${facture.electricite.ancien} → ${facture.electricite.nouveau} kWh</span><span>${facture.electricite.consommation} kWh</span></div>
             <div class="f-row"><span>× ${facture.electricite.prix_unitaire} FCFA/kWh</span><span>${facture.electricite.montant.toLocaleString()} FCFA</span></div>
             <div class="f-row total"><span>💰 TOTAL À PAYER</span><span>${facture.total.toLocaleString()} FCFA</span></div>
+            <div style="margin-top:16px; text-align:right;">
+            <button onclick="imprimerFacture()">🖨️ Imprimer</button>
+            </div>
         </div>`;
 
     if (releves.length > 1) {
@@ -550,13 +594,14 @@ async function afficherFacture() {
                 <td>${r.elec_ancien} → ${r.elec_nouveau}</td>
                 <td>${cElec.toFixed(2)} kWh</td>
                 <td><strong>${total.toLocaleString()} FCFA</strong></td>
+                <td><button classe="danger" onclick="supprimerReleve(${r.id})">🗑️</button></td>
             </tr>`;
         }).join('');
         html += `
             <div class="historique-box">
                 <h4>Historique des relevés</h4>
                 <table>
-                    <thead><tr><th>Mois</th><th>Eau (m³)</th><th>Conso eau</th><th>Élec (kWh)</th><th>Conso élec</th><th>Total</th></tr></thead>
+                    <thead><tr><th>Mois</th><th>Eau (m³)</th><th>Conso eau</th><th>Élec (kWh)</th><th>Conso élec</th><th>Total</th><th></th></tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
             </div>`;
@@ -564,6 +609,9 @@ async function afficherFacture() {
     container.innerHTML = html;
 }
 
+function imprimerFacture() {
+    window.print();
+}
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 const MOIS = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
@@ -578,6 +626,44 @@ async function loadDashboard() {
     p.textContent = data.mois && data.annee
         ? `Données de ${MOIS[data.mois]} ${data.annee}`
         : (data.message || '');
+}
+
+async function exporterCSV() {
+    const resCh = await fetch('/api/chambres');
+    const chambres = await resCh.json();
+
+    const resConf = await fetch('/api/config');
+    const config = await resConf.json();
+
+    let lignes = ['Chambre;Locataire;Mois;Annee;Conso Eau (m3);Montant Eau;Conso Elec (kWh);Montant Elec;Total'];
+
+    for (const c of chambres) {
+        const resR = await fetch(`/api/releves/${c.id}`);
+        const releves = await resR.json;
+        if (!Array.isArray(releves)) continue;
+
+        for (const r of releves) {
+            const cEau = r.eau_nouveau - r.eau_ancien;
+            const cElec = r.elec_nouveau - r.elec_ancien;
+            const mEau = cEau * config.prix_eau;
+            const mElec = cElec * config.prix_elec;
+            const total = mEau + mElec;
+
+            lignes.push(`${c.numero};${c.nom_locataire};${r.mois};${r.annee};${cEau};${mEau};${cElec};${mElec};${total}`);
+        }
+    }
+
+    const contenu = lignes.join('\n');
+    const blob = new Blob([contenu], { type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+
+    const lien = document.createElement('a');
+    lien.href = url;
+    lien.download = `gestappart_export.csv`;
+    lien.click();
+
+    URL.revokeObjectURL(url);
+    showToast('Export CSV téléchargé', 'info')
 }
 
 // ── Config ────────────────────────────────────────────────────────────────────
